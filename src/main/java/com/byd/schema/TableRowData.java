@@ -14,7 +14,7 @@ import java.io.Serializable;
  */
 @Data
 @Builder
-public class TableRow implements Serializable {
+public class TableRowData implements Serializable {
     private String sourceTable;
     private RowData rowData;
 }

@@ -1,17 +1,15 @@
 package com.byd;
 
-import com.byd.schema.TableRow;
+import com.byd.schema.MySqlSchemaConverter;
+import com.byd.schema.TableRowData;
 import com.byd.schema.TableRowDataDebeziumDeserializationSchema;
 import com.ververica.cdc.connectors.mysql.source.MySqlSource;
 import com.ververica.cdc.connectors.mysql.table.StartupOptions;
-import com.ververica.cdc.debezium.JsonDebeziumDeserializationSchema;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.runtime.state.hashmap.HashMapStateBackend;
-import org.apache.flink.runtime.state.storage.FileSystemCheckpointStorage;
 import org.apache.flink.streaming.api.CheckpointingMode;
-import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.CheckpointConfig;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -19,14 +17,11 @@ import org.apache.flink.table.data.RowData;
 import org.apache.hudi.common.model.HoodieTableType;
 import org.apache.hudi.configuration.FlinkOptions;
 import org.apache.hudi.util.HoodiePipeline;
-import org.apache.kafka.connect.json.DecimalFormat;
-import org.apache.kafka.connect.json.JsonConverterConfig;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
-public class CDCJob {
+public class Cdc2HudiJob {
     public static void main(String[] args) throws Exception {
         try {
             runAPP();
@@ -39,7 +34,7 @@ public class CDCJob {
         // flink env
 //        System.setProperty("HADOOP_USER_NAME", "root");
         Configuration configuration = new Configuration();
-        configuration.setString("execution.savepoint.path", "file:///D://ck/12ea46b863ff9d00121047dda8cf9989/chk-62");
+//        configuration.setString("execution.savepoint.path", "file:///D://ck/12ea46b863ff9d00121047dda8cf9989/chk-62");
         StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(configuration);
 
         env.enableCheckpointing(5000, CheckpointingMode.EXACTLY_ONCE);
@@ -56,7 +51,7 @@ public class CDCJob {
 //        customConverterConfigs.put(JsonConverterConfig.DECIMAL_FORMAT_CONFIG, DecimalFormat.NUMERIC.name());
 
         // mysql-cdc
-        MySqlSource<TableRow> source = MySqlSource.<TableRow>builder()
+        MySqlSource<TableRowData> source = MySqlSource.<TableRowData>builder()
                 .hostname("43.139.84.117")
                 .port(3306)
                 .scanNewlyAddedTableEnabled(true)
@@ -66,12 +61,12 @@ public class CDCJob {
                 .password("123456")
                 //.debeziumProperties(prop)
                 .startupOptions(StartupOptions.initial())
-                .deserializer(new TableRowDataDebeziumDeserializationSchema())
+                .deserializer(new TableRowDataDebeziumDeserializationSchema(new MySqlSchemaConverter()))
                 .build();
 
         SingleOutputStreamOperator<RowData> mysqlStream = env
                 .fromSource(source, WatermarkStrategy.noWatermarks(), "MySQL Source")
-                .map((MapFunction<TableRow, RowData>) TableRow::getRowData);
+                .map((MapFunction<TableRowData, RowData>) TableRowData::getRowData);
         // hudi sink
 
         mysqlStream.printToErr(">>>");
