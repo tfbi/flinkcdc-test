@@ -1,0 +1,7 @@
+<configuration>
+    <!-- 指定NameNode的地址 -->
+    <property>
+        <name>fs.defaultFS</name>
+        <value>hdfs://linux01:8020</value>
+    </property>
+</configuration>
