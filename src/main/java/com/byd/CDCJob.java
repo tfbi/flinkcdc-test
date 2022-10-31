@@ -37,14 +37,14 @@ public class CDCJob {
 
     public static void runAPP() throws Exception {
         // flink env
-        System.setProperty("HADOOP_USER_NAME", "root");
+//        System.setProperty("HADOOP_USER_NAME", "root");
         Configuration configuration = new Configuration();
-//        configuration.setString("execution.savepoint.path", "file:///Users/looper/Desktop/ck/33f7bcf20835587d3163174831f60d54/chk-23");
+        configuration.setString("execution.savepoint.path", "file:///D://ck/12ea46b863ff9d00121047dda8cf9989/chk-62");
         StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(configuration);
 
         env.enableCheckpointing(5000, CheckpointingMode.EXACTLY_ONCE);
         env.setStateBackend(new HashMapStateBackend());
-        env.getCheckpointConfig().setCheckpointStorage("file:///Users/looper/Desktop/ck");
+        env.getCheckpointConfig().setCheckpointStorage("file:///d://ck");
         env.getCheckpointConfig().
                 enableExternalizedCheckpoints(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
 
@@ -57,13 +57,13 @@ public class CDCJob {
 
         // mysql-cdc
         MySqlSource<TableRow> source = MySqlSource.<TableRow>builder()
-                .hostname("192.168.10.101")
+                .hostname("43.139.84.117")
                 .port(3306)
                 .scanNewlyAddedTableEnabled(true)
-                .databaseList("cdc") // 设置捕获的数据库， 如果需要同步整个数据库，请将 tableList 设置为 ".*".
-                .tableList("cdc.stu") // 设置捕获的表
+                .databaseList("test") // 设置捕获的数据库， 如果需要同步整个数据库，请将 tableList 设置为 ".*".
+                .tableList("test.stu") // 设置捕获的表
                 .username("root")
-                .password("root")
+                .password("123456")
                 //.debeziumProperties(prop)
                 .startupOptions(StartupOptions.initial())
                 .deserializer(new TableRowDataDebeziumDeserializationSchema())
@@ -77,7 +77,7 @@ public class CDCJob {
         mysqlStream.printToErr(">>>");
 
         String targetTable = "t1";
-        String basePath = "file:///Users/looper/Desktop/hudi/t1";
+        String basePath = "file:///d://hudi/t1";
 
         Map<String, String> options = new HashMap<>();
         options.put(FlinkOptions.PATH.key(), basePath);
@@ -85,16 +85,18 @@ public class CDCJob {
 //        options.put(FlinkOptions.PRECOMBINE_FIELD.key(), "ts");
 
         HoodiePipeline.Builder builder = HoodiePipeline.builder(targetTable)
-                .column("id INT")
-                .column("name VARCHAR(20)")
+                .column("id BIGINT")
+                .column("name STRING")
                 .column("age INT")
-                .column("`partition` VARCHAR(20)")
+                .column("birthday DATE")
+                .column("ts TIMESTAMP(3)")
+                .column("money DECIMAL(16,2)")
+                .column("`partition` STRING")
                 .pk("id")
                 .partition("partition")
                 .options(options);
 
         builder.sink(mysqlStream, false); // The second parameter indicating whether the input data stream is bounded
         env.execute("Api_Sink");
-
     }
 }

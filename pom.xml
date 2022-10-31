@@ -35,8 +35,9 @@ under the License.
         <maven.compiler.source>${target.java.version}</maven.compiler.source>
         <maven.compiler.target>${target.java.version}</maven.compiler.target>
         <log4j.version>2.12.1</log4j.version>
+        <hive.version>3.1.2</hive.version>
     </properties>
-    
+
 
     <dependencies>
         <!-- Apache Flink dependencies -->
@@ -143,12 +144,18 @@ under the License.
             <version>${flink.version}</version>
         </dependency>
 
-
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-client</artifactId>
             <version>3.1.3</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-sql-connector-hive-3.1.2_2.11</artifactId>
+            <version>${flink.version}</version>
+        </dependency>
+
 
         <!-- Add logging framework, to produce console output when running in the IDE. -->
         <!-- These dependencies are excluded from the application JAR by default. -->
