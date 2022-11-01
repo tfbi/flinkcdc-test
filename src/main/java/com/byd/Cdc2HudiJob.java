@@ -32,9 +32,8 @@ public class Cdc2HudiJob {
 
     public static void runAPP() throws Exception {
         // flink env
-//        System.setProperty("HADOOP_USER_NAME", "root");
+        System.setProperty("HADOOP_USER_NAME", "root");
         Configuration configuration = new Configuration();
-//        configuration.setString("execution.savepoint.path", "file:///D://ck/12ea46b863ff9d00121047dda8cf9989/chk-62");
         StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(configuration);
 
         env.enableCheckpointing(5000, CheckpointingMode.EXACTLY_ONCE);
@@ -43,23 +42,22 @@ public class Cdc2HudiJob {
         env.getCheckpointConfig().
                 enableExternalizedCheckpoints(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
 
-        //debezium config
-//        Properties prop = new Properties();
-//        prop.put("decimal.handling.mode", "string");
-//
-//        Map<String, Object> customConverterConfigs = new HashMap<String, Object>();
-//        customConverterConfigs.put(JsonConverterConfig.DECIMAL_FORMAT_CONFIG, DecimalFormat.NUMERIC.name());
+        /* debezium config
+         Properties prop = new Properties();
+         prop.put("decimal.handling.mode", "string");
+         Map<String, Object> customConverterConfigs = new HashMap<String, Object>();
+         customConverterConfigs.put(JsonConverterConfig.DECIMAL_FORMAT_CONFIG, DecimalFormat.NUMERIC.name());
+         */
 
-        // mysql-cdc
+        // db-cdc
         MySqlSource<TableRowData> source = MySqlSource.<TableRowData>builder()
                 .hostname("43.139.84.117")
                 .port(3306)
                 .scanNewlyAddedTableEnabled(true)
-                .databaseList("test") // 设置捕获的数据库， 如果需要同步整个数据库，请将 tableList 设置为 ".*".
-                .tableList("test.stu") // 设置捕获的表
+                .databaseList("test")
+                .tableList("test.stu")
                 .username("root")
                 .password("123456")
-                //.debeziumProperties(prop)
                 .startupOptions(StartupOptions.initial())
                 .deserializer(new TableRowDataDebeziumDeserializationSchema(new MySqlSchemaConverter()))
                 .build();
@@ -67,17 +65,16 @@ public class Cdc2HudiJob {
         SingleOutputStreamOperator<RowData> mysqlStream = env
                 .fromSource(source, WatermarkStrategy.noWatermarks(), "MySQL Source")
                 .map((MapFunction<TableRowData, RowData>) TableRowData::getRowData);
-        // hudi sink
 
         mysqlStream.printToErr(">>>");
 
+        // hudi sink
         String targetTable = "t1";
         String basePath = "file:///d://hudi/t1";
-
         Map<String, String> options = new HashMap<>();
         options.put(FlinkOptions.PATH.key(), basePath);
         options.put(FlinkOptions.TABLE_TYPE.key(), HoodieTableType.MERGE_ON_READ.name());
-//        options.put(FlinkOptions.PRECOMBINE_FIELD.key(), "ts");
+        options.put(FlinkOptions.PRECOMBINE_FIELD.key(), "ts");
 
         HoodiePipeline.Builder builder = HoodiePipeline.builder(targetTable)
                 .column("id BIGINT")
@@ -91,7 +88,7 @@ public class Cdc2HudiJob {
                 .partition("partition")
                 .options(options);
 
-        builder.sink(mysqlStream, false); // The second parameter indicating whether the input data stream is bounded
+        builder.sink(mysqlStream, false);
         env.execute("Api_Sink");
     }
 }

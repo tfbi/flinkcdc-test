@@ -19,33 +19,19 @@
 
 package com.byd.schema;
 
-import com.ververica.cdc.debezium.table.DeserializationRuntimeConverter;
-import com.ververica.cdc.debezium.utils.TemporalConversions;
-import io.debezium.data.SpecialValueDecimal;
-import io.debezium.data.VariableScaleDecimal;
-import io.debezium.time.*;
 import org.apache.flink.api.common.typeinfo.BasicTypeInfo;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.table.data.*;
-import org.apache.flink.table.types.logical.DecimalType;
 import org.apache.flink.types.RowKind;
 import org.apache.flink.util.Collector;
 import com.ververica.cdc.debezium.DebeziumDeserializationSchema;
 import io.debezium.data.Envelope;
-import org.apache.kafka.connect.data.Decimal;
 import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.source.SourceRecord;
 
-import java.math.BigDecimal;
-import java.nio.ByteBuffer;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 
 /**
@@ -57,22 +43,15 @@ public final class TableRowDataDebeziumDeserializationSchema
 
     private static final String SOURCE = "source";
     private static final String TABLE = "table";
-    private final ZoneId serverTimeZone;
 
-    private final BaseConverter converter;
+    private final BaseSchemaConverter converter;
 
-    public TableRowDataDebeziumDeserializationSchema(ZoneId serverTimeZone, BaseConverter converter) {
-        this.serverTimeZone = serverTimeZone;
-        this.converter = converter;
-    }
-
-    public TableRowDataDebeziumDeserializationSchema(BaseConverter converter) {
-        this.serverTimeZone = ZoneId.of("Asia/Shanghai");
+    public TableRowDataDebeziumDeserializationSchema(BaseSchemaConverter converter) {
         this.converter = converter;
     }
 
     @Override
-    public void deserialize(SourceRecord record, Collector<TableRowData> out) throws Exception {
+    public void deserialize(SourceRecord record, Collector<TableRowData> out) {
         Envelope.Operation op = Envelope.operationFor(record);
         Struct value = (Struct) record.value();
         Schema valueSchema = record.valueSchema();
@@ -99,19 +78,18 @@ public final class TableRowDataDebeziumDeserializationSchema
         }
     }
 
-    private GenericRowData extractAfterRow(Struct value, Schema valueSchema) throws Exception {
+    private GenericRowData extractAfterRow(Struct value, Schema valueSchema) {
         Struct after = value.getStruct(Envelope.FieldName.AFTER);
         return extractRow(after, valueSchema);
     }
 
     public GenericRowData extractRow(Struct value, Schema valueSchema) {
-        System.out.println(valueSchema);
         List<Field> fields = value.schema().fields();
         GenericRowData rowData = new GenericRowData(fields.size() + 1);
         int pos = 0;
         for (Field field : fields) {
             String schemaName = field.schema().name();
-            Object fieldValue = null;
+            Object fieldValue;
             if (schemaName != null) {
                 try {
                     fieldValue = this.converter.convert(schemaName, value.get(field), field.schema());
@@ -130,16 +108,16 @@ public final class TableRowDataDebeziumDeserializationSchema
             }
             rowData.setField(pos++, fieldValue);
         }
-        // partition
+        // partition set
         try {
-            rowData.setField(pos, this.converter.convert(Schema.Type.STRING, "part1", null));
+            rowData.setField(pos, converter.convert(Schema.Type.STRING, "part1", null));
         } catch (Exception e) {
             e.printStackTrace();
         }
         return rowData;
     }
 
-    private GenericRowData extractBeforeRow(Struct value, Schema valueSchema) throws Exception {
+    private GenericRowData extractBeforeRow(Struct value, Schema valueSchema) {
         Struct before = value.getStruct(Envelope.FieldName.BEFORE);
         return extractRow(before, valueSchema);
     }

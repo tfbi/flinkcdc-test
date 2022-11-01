@@ -10,7 +10,7 @@ import java.time.ZoneId;
 
 import static com.byd.schema.ConvertFunctions.*;
 
-public class MySqlSchemaConverter extends BaseConverter {
+public class MySqlSchemaConverter extends BaseSchemaConverter {
 
     public MySqlSchemaConverter(ZoneId serverTimeZone) {
         super(serverTimeZone);
@@ -39,9 +39,9 @@ public class MySqlSchemaConverter extends BaseConverter {
 
         DeserializationRuntimeConverter decimalConverter = createDecimalConverter();
         classConverterMap.put(Decimal.LOGICAL_NAME, decimalConverter);
-        DeserializationRuntimeConverter localTimeZoneConvert = convertToLocalTimeZoneTimestamp();
 
-        classConverterMap.put(ZonedTimestamp.SCHEMA_NAME, convertToLocalTimeZoneTimestamp());
+        DeserializationRuntimeConverter localTimeZoneConvert = convertToLocalTimeZoneTimestamp();
+        classConverterMap.put(ZonedTimestamp.SCHEMA_NAME, localTimeZoneConvert);
 
 
         DeserializationRuntimeConverter intConvert = convertToInt();

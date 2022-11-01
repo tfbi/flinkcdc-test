@@ -8,16 +8,16 @@ import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class BaseConverter implements Serializable {
+public abstract class BaseSchemaConverter implements Serializable {
     protected final ZoneId serverTimeZone;
     protected static Map<String, DeserializationRuntimeConverter> classConverterMap = new HashMap<>();
     protected static Map<Schema.Type, DeserializationRuntimeConverter> typeConverterMap = new HashMap<>();
 
-    protected BaseConverter(ZoneId serverTimeZone) {
+    protected BaseSchemaConverter(ZoneId serverTimeZone) {
         this.serverTimeZone = serverTimeZone;
         intConvertMap();
     }
-    protected BaseConverter() {
+    protected BaseSchemaConverter() {
         this.serverTimeZone = ZoneId.of("Asia/Shanghai");
         intConvertMap();
     }

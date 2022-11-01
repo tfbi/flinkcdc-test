@@ -1,16 +1,9 @@
 package com.byd;
 
-import org.apache.flink.connector.jdbc.catalog.JdbcCatalog;
-import org.apache.flink.runtime.state.hashmap.HashMapStateBackend;
-import org.apache.flink.streaming.api.CheckpointingMode;
-import org.apache.flink.streaming.api.datastream.DataStream;
-import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.*;
-import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
-import org.apache.flink.types.Row;
 
-public class JDBCApp {
-    public static void main(String[] args) throws Exception {
+public class HudiStreamQuery {
+    public static void main(String[] args) {
         try {
             runAPP();
         } catch (Exception e) {
@@ -18,7 +11,7 @@ public class JDBCApp {
         }
     }
 
-    public static void runAPP() throws Exception {
+    public static void runAPP() {
         // flink tenv
         EnvironmentSettings settings = EnvironmentSettings
                 .newInstance()
