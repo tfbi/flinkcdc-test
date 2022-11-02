@@ -18,6 +18,7 @@ public class HudiStreamQuery {
                 .inStreamingMode()
                 .build();
         TableEnvironment tenv = TableEnvironment.create(settings);
+
         tenv.executeSql("CREATE TABLE t1(" +
                 "  id BIGINT PRIMARY KEY NOT ENFORCED," +
                 "  name STRING," +
