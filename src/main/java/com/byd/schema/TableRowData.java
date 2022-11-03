@@ -12,5 +12,6 @@ import java.io.Serializable;
 @Builder
 public class TableRowData implements Serializable {
     private String sourceTable;
+    private String sourceDb;
     private RowData rowData;
 }

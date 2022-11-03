@@ -2,15 +2,9 @@ package com.byd;
 
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.table.api.EnvironmentSettings;
-import org.apache.flink.table.api.Schema;
 import org.apache.flink.table.api.TableEnvironment;
-import org.apache.flink.table.catalog.*;
 import org.apache.flink.table.catalog.exceptions.TableNotExistException;
 import org.apache.hudi.table.catalog.HoodieCatalog;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
 
 public class CatalogTest {
     public static void main(String[] args) throws TableNotExistException {
@@ -27,6 +21,20 @@ public class CatalogTest {
         tenv.registerCatalog("hudi_catalog", hudi_catalog);
         tenv.useCatalog("hudi_catalog");
         tenv.executeSql("use test");
-        tenv.executeSql("select * from t1").print();
+//        tenv.executeSql("drop table t2");
+//        tenv.executeSql("CREATE TABLE t2(" +
+//                "  id BIGINT PRIMARY KEY NOT ENFORCED," +
+//                "  name STRING," +
+//                "  company STRING," +
+//                "  weight DECIMAL(16,2)," +
+//                "  `partition` STRING" +
+//                ")" +
+//                "PARTITIONED BY (`partition`)" +
+//                "WITH (" +
+//                "  'connector'='hudi'," +
+//                "  'path'='file:///d://hudi/t2'," +
+//                "  'table.type'='MERGE_ON_READ'" +
+//                ")");
+        tenv.executeSql("select * from t2").print();
     }
 }

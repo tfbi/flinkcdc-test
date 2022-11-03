@@ -37,7 +37,6 @@ public class HudiStreamQuery {
                 "'read.start-commit'='20221031095157'," +
                 "'read.streaming.check-interval'='5'" +
                 ")");
-        Table t1 = tenv.from("t1");
-        t1.execute().print();
+        tenv.executeSql("desc t1");
     }
 }

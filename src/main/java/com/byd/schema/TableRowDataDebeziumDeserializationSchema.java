@@ -37,12 +37,15 @@ import java.util.List;
 /**
  * Deserialization schema from Debezium object to Flink Table/SQL internal data structure {@link
  * RowData}.
+ *
+ * @author bi.tengfei1
  */
 public final class TableRowDataDebeziumDeserializationSchema
         implements DebeziumDeserializationSchema<TableRowData> {
 
     private static final String SOURCE = "source";
     private static final String TABLE = "table";
+    private static final String DATABASE = "db";
 
     private final BaseSchemaConverter converter;
 
@@ -58,23 +61,24 @@ public final class TableRowDataDebeziumDeserializationSchema
         // get source table
         final Struct source = value.getStruct(SOURCE);
         String table = source.getString(TABLE);
+        String database = source.getString(DATABASE);
         // judge rowKind
         if (op == Envelope.Operation.CREATE || op == Envelope.Operation.READ) {
             GenericRowData insert = extractAfterRow(value, valueSchema);
             insert.setRowKind(RowKind.INSERT);
-            emit(insert, table, out);
+            emit(insert, database, table, out);
         } else if (op == Envelope.Operation.DELETE) {
             GenericRowData delete = extractBeforeRow(value, valueSchema);
             delete.setRowKind(RowKind.DELETE);
-            emit(delete, table, out);
+            emit(delete, database, table, out);
         } else {
             GenericRowData before = extractBeforeRow(value, valueSchema);
             before.setRowKind(RowKind.UPDATE_BEFORE);
-            emit(before, table, out);
+            emit(before, database, table, out);
 
             GenericRowData after = extractAfterRow(value, valueSchema);
             after.setRowKind(RowKind.UPDATE_AFTER);
-            emit(after, table, out);
+            emit(after, database, table, out);
         }
     }
 
@@ -110,7 +114,7 @@ public final class TableRowDataDebeziumDeserializationSchema
         }
         // partition set
         try {
-            rowData.setField(pos, converter.convert(Schema.Type.STRING, "part1", null));
+            rowData.setField(pos, converter.convert(Schema.Type.STRING, "default", null));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -122,8 +126,8 @@ public final class TableRowDataDebeziumDeserializationSchema
         return extractRow(before, valueSchema);
     }
 
-    private void emit(RowData rowData, String sourceTable, Collector<TableRowData> collector) {
-        collector.collect(TableRowData.builder().rowData(rowData).sourceTable(sourceTable).build());
+    private void emit(RowData rowData, String sourceDb, String sourceTable, Collector<TableRowData> collector) {
+        collector.collect(TableRowData.builder().rowData(rowData).sourceDb(sourceDb).sourceTable(sourceTable).build());
     }
 
     @Override

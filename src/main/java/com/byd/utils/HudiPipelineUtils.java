@@ -7,7 +7,9 @@ import org.apache.flink.table.catalog.ObjectPath;
 import org.apache.flink.table.catalog.exceptions.TableNotExistException;
 import org.apache.hudi.util.HoodiePipeline;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -15,7 +17,7 @@ import java.util.Optional;
  */
 public class HudiPipelineUtils {
 
-    public static HoodiePipeline.Builder createHudiPipeline(String tableName, String dbName) throws TableNotExistException {
+    public static HoodiePipeline.Builder createHudiPipeline( String dbName,String tableName, Map<String, String> options) throws TableNotExistException {
         Catalog catalog = HudiCatalogManager.getCatalog();
         // get table
         CatalogTable table = (CatalogTable) catalog.getTable(new ObjectPath(dbName, tableName));
@@ -42,7 +44,43 @@ public class HudiPipelineUtils {
         }
 
         //set options
-        builder.options(table.getOptions());
+        if (options != null && !options.isEmpty()) {
+            builder.options(options);
+        }
+        if (table.getOptions() != null && !table.getOptions().isEmpty()) {
+            builder.options(table.getOptions());
+        }
         return builder;
+
+    }
+
+    public static HoodiePipeline.Builder createHudiPipeline(String tableName, String dbName) throws TableNotExistException {
+        return createHudiPipeline(tableName, dbName, null);
+    }
+
+    public static Map<String, HoodiePipeline.Builder> checkTableAndCreatePipelineMap(String sourceDb, String sourceTbList, String hudiDb, String hudiTbList) throws Exception {
+        Catalog catalog = HudiCatalogManager.getCatalog();
+        String[] sourceTbArr = sourceTbList.split(",");
+        String[] huidTbArr = hudiTbList.split(",");
+        if (huidTbArr.length <= 0 || sourceTbArr.length != huidTbArr.length) {
+            throw new Exception("source table is not match hudi table");
+        }
+        Map<String, HoodiePipeline.Builder> HudiPipelineMap = new HashMap<>();
+
+        for (int i = 0; i < huidTbArr.length; i++) {
+            String hudiTbName = huidTbArr[i];
+            ObjectPath tablePath = new ObjectPath(hudiDb, hudiTbName);
+            boolean flag = catalog.tableExists(tablePath);
+            if (!flag) {
+                throw new TableNotExistException("huid_catalog", tablePath);
+            }
+        }
+        for (int i = 0; i < huidTbArr.length; i++) {
+            String hudiTbName = huidTbArr[i];
+            String sourceTbName = sourceTbArr[i];
+            HoodiePipeline.Builder hudiPipeline = createHudiPipeline(hudiDb, hudiTbName, null);
+            HudiPipelineMap.put(sourceDb + "." + sourceTbName, hudiPipeline);
+        }
+        return HudiPipelineMap;
     }
 }
