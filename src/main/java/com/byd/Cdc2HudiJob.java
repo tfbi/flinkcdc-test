@@ -46,7 +46,9 @@ public class Cdc2HudiJob {
 
         // db-cdc-source
         Configuration mysqlConf = new Configuration();
-        mysqlConf.set(SourceUtils.HOST_NAME, "43.139.84.117");
+        mysqlConf.set(SourceUtils.HOST_NAME, "10.17.7.197");
+        mysqlConf.set(SourceUtils.USERNAME, "canal");
+        mysqlConf.set(SourceUtils.PASSWORD, "Bigdata@123");
         mysqlConf.set(SourceUtils.DATABASE, sourceDb);
         mysqlConf.set(SourceUtils.TABLE_LIST_STR, sourceTbList);
         MySqlSource<TableRowData> source = SourceUtils.createMysqlCDCSource(mysqlConf);
@@ -60,6 +62,6 @@ public class Cdc2HudiJob {
         //stream - sink
         StreamUtils.StreamSink2HudiPipeline(sourceStream, outputMap, pipelineMap);
 
-        env.execute("hudi_Sink");
+        env.execute("flink-cdc_hudi-test");
     }
 }
