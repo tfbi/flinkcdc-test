@@ -8,7 +8,5 @@ public class Mysql2Hudi {
     public static void main(String[] args) {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(new Configuration());
         StreamTableEnvironment tenv = StreamTableEnvironment.create(env);
-
-
     }
 }

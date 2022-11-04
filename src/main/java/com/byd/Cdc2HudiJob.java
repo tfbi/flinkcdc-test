@@ -25,12 +25,11 @@ public class Cdc2HudiJob {
 
     public static void runAPP() throws Exception {
         // flink env tenv
-        System.setProperty("HADOOP_USER_NAME", "root");
-        StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(new Configuration());
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         StreamTableEnvironment tenv = StreamTableEnvironment.create(env);
 
         //set checkpoint
-        CheckpointUtils.setCheckpoint(env, "file:///d://ck");
+        CheckpointUtils.setCheckpoint(env, "hdfs://master02-cdpdev-ic:8020/tmp/flink_ck");
 
         String sourceDb = "test";
         String sourceTbList = "stu,person";
@@ -39,7 +38,7 @@ public class Cdc2HudiJob {
 
         // register hudi catalog
         Configuration catalogConf = new Configuration();
-        catalogConf.setString("catalog.path", "file:///d:/tmp/hoodie_catalog");
+        catalogConf.setString("catalog.path", "hdfs://master02-cdpdev-ic:8020/tmp/hudi_catalog");
         HudiCatalogManager.registerHoodieCatalog(tenv, catalogConf);
 
         // check table and create pipeline
