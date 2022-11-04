@@ -29,7 +29,7 @@ public class Cdc2HudiJob {
         StreamTableEnvironment tenv = StreamTableEnvironment.create(env);
 
         //set checkpoint
-        CheckpointUtils.setCheckpoint(env, "hdfs://master02-cdpdev-ic:8020/tmp/flink_ck");
+        CheckpointUtils.setCheckpoint(env, "file:///d:/tmp/flink_ck");
 
         String sourceDb = "test";
         String sourceTbList = "stu,person";
@@ -38,7 +38,7 @@ public class Cdc2HudiJob {
 
         // register hudi catalog
         Configuration catalogConf = new Configuration();
-        catalogConf.setString("catalog.path", "hdfs://master02-cdpdev-ic:8020/tmp/hudi_catalog");
+        catalogConf.setString("catalog.path", "file:///d:/tmp/hoodie_catalog");
         HudiCatalogManager.registerHoodieCatalog(tenv, catalogConf);
 
         // check table and create pipeline

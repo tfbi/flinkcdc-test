@@ -22,19 +22,19 @@ public class CatalogTest {
         tenv.useCatalog("hudi_catalog");
         tenv.executeSql("use test");
 //        tenv.executeSql("drop table t2");
-        tenv.executeSql("CREATE TABLE t2(" +
-                "  id BIGINT PRIMARY KEY NOT ENFORCED," +
-                "  name STRING," +
-                "  company STRING," +
-                "  weight DECIMAL(16,2)," +
-                "  `partition` STRING" +
-                ")" +
-                "PARTITIONED BY (`partition`)" +
-                "WITH (" +
-                "  'connector'='hudi'," +
-                "  'path'='file:///d://hudi/t2'," +
-                "  'table.type'='MERGE_ON_READ'" +
-                ")");
+//        tenv.executeSql("CREATE TABLE t2(" +
+//                "  id BIGINT PRIMARY KEY NOT ENFORCED," +
+//                "  name STRING," +
+//                "  company STRING," +
+//                "  weight DECIMAL(16,2)," +
+//                "  `partition` STRING" +
+//                ")" +
+//                "PARTITIONED BY (`partition`)" +
+//                "WITH (" +
+//                "  'connector'='hudi'," +
+//                "  'path'='file:///d://hudi/t2'," +
+//                "  'table.type'='MERGE_ON_READ'" +
+//                ")");
         tenv.executeSql("select * from t2").print();
     }
 }
