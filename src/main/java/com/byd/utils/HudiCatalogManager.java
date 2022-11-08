@@ -8,7 +8,6 @@ import org.apache.flink.table.catalog.Catalog;
 import org.apache.flink.table.catalog.exceptions.CatalogException;
 import org.apache.hudi.table.catalog.HoodieCatalog;
 import org.apache.hudi.table.catalog.HoodieHiveCatalog;
-
 import static org.apache.hudi.table.catalog.CatalogOptions.*;
 
 /**

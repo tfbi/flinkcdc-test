@@ -6,21 +6,28 @@ import org.apache.kafka.connect.data.Decimal;
 import org.apache.kafka.connect.data.Schema;
 
 import java.time.ZoneId;
+import java.util.HashMap;
+import java.util.Map;
 
 
 import static com.byd.schema.ConvertFunctions.*;
 
 public class MySqlSchemaConverter extends BaseSchemaConverter {
 
+    protected Map<String, DeserializationRuntimeConverter> classConverterMap = new HashMap<>();
+    protected Map<Schema.Type, DeserializationRuntimeConverter> typeConverterMap = new HashMap<>();
+
+
     public MySqlSchemaConverter(ZoneId serverTimeZone) {
         super(serverTimeZone);
+        intConvertMap();
     }
 
     public MySqlSchemaConverter() {
         super();
+        intConvertMap();
     }
 
-    @Override
     protected void intConvertMap() {
         final DeserializationRuntimeConverter timestampConvert = convertToTimestamp(serverTimeZone);
         classConverterMap.put(Timestamp.SCHEMA_NAME, timestampConvert);

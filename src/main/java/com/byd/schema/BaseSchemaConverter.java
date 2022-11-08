@@ -10,19 +10,14 @@ import java.util.Map;
 
 public abstract class BaseSchemaConverter implements Serializable {
     protected final ZoneId serverTimeZone;
-    protected static Map<String, DeserializationRuntimeConverter> classConverterMap = new HashMap<>();
-    protected static Map<Schema.Type, DeserializationRuntimeConverter> typeConverterMap = new HashMap<>();
 
     protected BaseSchemaConverter(ZoneId serverTimeZone) {
         this.serverTimeZone = serverTimeZone;
-        intConvertMap();
-    }
-    protected BaseSchemaConverter() {
-        this.serverTimeZone = ZoneId.of("Asia/Shanghai");
-        intConvertMap();
     }
 
-    protected abstract void intConvertMap();
+    protected BaseSchemaConverter() {
+        this.serverTimeZone = ZoneId.of("Asia/Shanghai");
+    }
 
     public abstract Object convert(Schema.Type type, Object obj, Schema schema) throws Exception;
 

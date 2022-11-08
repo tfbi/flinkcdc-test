@@ -19,13 +19,15 @@
 
 package com.byd.schema;
 
-import org.apache.flink.api.common.typeinfo.BasicTypeInfo;
-import org.apache.flink.api.common.typeinfo.TypeInformation;
-import org.apache.flink.table.data.*;
-import org.apache.flink.types.RowKind;
-import org.apache.flink.util.Collector;
 import com.ververica.cdc.debezium.DebeziumDeserializationSchema;
 import io.debezium.data.Envelope;
+import org.apache.flink.api.common.typeinfo.BasicTypeInfo;
+import org.apache.flink.api.common.typeinfo.TypeInformation;
+import org.apache.flink.table.data.GenericRowData;
+import org.apache.flink.table.data.RowData;
+import org.apache.flink.table.data.StringData;
+import org.apache.flink.types.RowKind;
+import org.apache.flink.util.Collector;
 import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.Struct;
@@ -114,8 +116,9 @@ public final class TableRowDataDebeziumDeserializationSchema
         }
         // partition set
         try {
-            rowData.setField(pos, converter.convert(Schema.Type.STRING, "default", null));
+            rowData.setField(pos, StringData.fromString("default"));
         } catch (Exception e) {
+            System.out.println("default");
             e.printStackTrace();
         }
         return rowData;
