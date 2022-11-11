@@ -10,8 +10,10 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.util.OutputTag;
+import org.apache.hudi.configuration.FlinkOptions;
 import org.apache.hudi.util.HoodiePipeline;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class Cdc2HudiJob {
@@ -34,15 +36,24 @@ public class Cdc2HudiJob {
         String sourceDb = "test";
         String sourceTbList = "stu,person";
         String hudiDb = "test";
-        String hudiTbList = "t1,t2";
+        String hudiTbList = "hudi_t1,hudi_t2";
 
         // register hudi catalog
         Configuration catalogConf = new Configuration();
         catalogConf.setString("catalog.path", "hdfs://master02-cdpdev-ic:8020/tmp/hudi_catalog");
+        catalogConf.setString("default", hudiDb);
+
         HudiCatalogManager.registerHoodieCatalog(tenv, catalogConf);
 
+        HashMap<String, String> options = new HashMap<>();
+        options.put(FlinkOptions.HIVE_SYNC_ENABLED.key(), "true");
+        options.put(FlinkOptions.HIVE_SYNC_MODE.key(), "hms");
+        options.put(FlinkOptions.HIVE_SYNC_METASTORE_URIS.key(), "thrift://master02-cdpdev-ic:9083");
+        options.put(FlinkOptions.HIVE_SYNC_DB.key(), "db_test");
+        options.put(FlinkOptions.HIVE_SYNC_CONF_DIR.key(), "/etc/hive/conf");
+
         // check table and create pipeline
-        Map<String, HoodiePipeline.Builder> pipelineMap = HudiPipelineUtils.checkTableAndCreatePipelineMap(sourceDb, sourceTbList, hudiDb, hudiTbList);
+        Map<String, HoodiePipeline.Builder> pipelineMap = HudiPipelineUtils.checkTableAndCreatePipelineMap(sourceDb, sourceTbList, hudiDb, hudiTbList, options);
 
         // db-cdc-source
         Configuration mysqlConf = new Configuration();
@@ -58,10 +69,8 @@ public class Cdc2HudiJob {
         SingleOutputStreamOperator<RowData> sourceStream = env
                 .fromSource(source, WatermarkStrategy.noWatermarks(), "Source")
                 .process(new RowDataAndShuntProcessFunction(outputMap));
-
         //stream - sink
         StreamUtils.StreamSink2HudiPipeline(sourceStream, outputMap, pipelineMap);
-
         env.execute("flink-cdc_hudi-test");
     }
 }

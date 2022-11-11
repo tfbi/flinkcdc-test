@@ -1,14 +1,14 @@
 package com.byd.utils;
 
-import lombok.Builder;
-import lombok.Data;
+import static org.apache.hudi.table.catalog.CatalogOptions.*;
+
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.table.api.TableEnvironment;
 import org.apache.flink.table.catalog.Catalog;
 import org.apache.flink.table.catalog.exceptions.CatalogException;
 import org.apache.hudi.table.catalog.HoodieCatalog;
 import org.apache.hudi.table.catalog.HoodieHiveCatalog;
-import static org.apache.hudi.table.catalog.CatalogOptions.*;
+
 
 /**
  * @author bi.tengfei1
@@ -35,13 +35,11 @@ public class HudiCatalogManager {
 
     public static synchronized void registerHoodieHiveCatalog(TableEnvironment tenv, Configuration config) {
         if (hudiHiveCatalog == null) {
-            String path = config.get(CATALOG_PATH);
-            String defaultDataBase = config.get(DEFAULT_DATABASE);
             String hiveConfDir = config.get(HIVE_CONF_DIR);
-            if (path == null || hiveConfDir == null) {
+            if (hiveConfDir == null) {
                 throw new CatalogException("missing necessary parameters");
             }
-            hudiHiveCatalog = new HoodieHiveCatalog("hudi_hive_catalog", path, defaultDataBase, hiveConfDir);
+            hudiHiveCatalog = new HoodieHiveCatalog("hudi_hive_catalog", config);
             tenv.registerCatalog("hudi_hive_catalog", hudiHiveCatalog);
             modeFlag = 2;
         } else {

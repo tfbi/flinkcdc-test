@@ -18,7 +18,7 @@ public class CheckpointUtils {
         env.setStateBackend(new HashMapStateBackend());
 
         // checkpoint配置
-        env.enableCheckpointing(TimeUnit.SECONDS.toMillis(10), CheckpointingMode.EXACTLY_ONCE);
+        env.enableCheckpointing(TimeUnit.SECONDS.toMillis(60), CheckpointingMode.EXACTLY_ONCE);
 
         CheckpointConfig checkpointConfig = env.getCheckpointConfig();
 

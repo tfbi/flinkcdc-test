@@ -22,22 +22,22 @@ under the License.
 
     <groupId>com.byd</groupId>
     <artifactId>flink-test</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.2-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Flink Quickstart Job</name>
 
 
-    <repositories>
-        <repository>
-            <id>cloudera</id>
-            <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
-        </repository>
-    </repositories>
+<!--    <repositories>-->
+<!--        <repository>-->
+<!--            <id>cloudera</id>-->
+<!--            <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>-->
+<!--        </repository>-->
+<!--    </repositories>-->
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <flink.version>1.13.2-csa1.5.3.0</flink.version>
+        <flink.version>1.13.3</flink.version>
         <target.java.version>1.8</target.java.version>
         <scala.binary.version>2.12</scala.binary.version>
         <maven.compiler.source>${target.java.version}</maven.compiler.source>
@@ -141,8 +141,8 @@ under the License.
         <!-- Flink 1.13 -->
         <dependency>
             <groupId>org.apache.hudi</groupId>
-            <artifactId>hudi-flink1.13-bundle</artifactId>
-            <version>0.12.0</version>
+            <artifactId>hudi-flink</artifactId>
+            <version>0.13.0</version>
             <scope>${default.scope}</scope>
         </dependency>
         <!-- Add connector dependencies here. They must be in the default scope (compile). -->

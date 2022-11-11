@@ -5,6 +5,8 @@ import org.apache.flink.table.catalog.Catalog;
 import org.apache.flink.table.catalog.CatalogTable;
 import org.apache.flink.table.catalog.ObjectPath;
 import org.apache.flink.table.catalog.exceptions.TableNotExistException;
+import org.apache.hudi.common.model.HoodieTableType;
+import org.apache.hudi.configuration.FlinkOptions;
 import org.apache.hudi.util.HoodiePipeline;
 
 import java.util.HashMap;
@@ -17,7 +19,7 @@ import java.util.Optional;
  */
 public class HudiPipelineUtils {
 
-    public static HoodiePipeline.Builder createHudiPipeline( String dbName,String tableName, Map<String, String> options) throws TableNotExistException {
+    public static HoodiePipeline.Builder createHudiPipeline(String dbName, String tableName, Map<String, String> options) throws TableNotExistException {
         Catalog catalog = HudiCatalogManager.getCatalog();
         // get table
         CatalogTable table = (CatalogTable) catalog.getTable(new ObjectPath(dbName, tableName));
@@ -44,21 +46,21 @@ public class HudiPipelineUtils {
         }
 
         //set options
-        if (options != null && !options.isEmpty()) {
-            builder.options(options);
-        }
         if (table.getOptions() != null && !table.getOptions().isEmpty()) {
             builder.options(table.getOptions());
         }
+        if (!options.isEmpty()) {
+            builder.options(options);
+            builder.option(FlinkOptions.HIVE_SYNC_TABLE.key(), tableName);
+        }
         return builder;
-
     }
 
     public static HoodiePipeline.Builder createHudiPipeline(String tableName, String dbName) throws TableNotExistException {
         return createHudiPipeline(tableName, dbName, null);
     }
 
-    public static Map<String, HoodiePipeline.Builder> checkTableAndCreatePipelineMap(String sourceDb, String sourceTbList, String hudiDb, String hudiTbList) throws Exception {
+    public static Map<String, HoodiePipeline.Builder> checkTableAndCreatePipelineMap(String sourceDb, String sourceTbList, String hudiDb, String hudiTbList, Map<String, String> options) throws Exception {
         Catalog catalog = HudiCatalogManager.getCatalog();
         String[] sourceTbArr = sourceTbList.split(",");
         String[] huidTbArr = hudiTbList.split(",");
@@ -78,7 +80,7 @@ public class HudiPipelineUtils {
         for (int i = 0; i < huidTbArr.length; i++) {
             String hudiTbName = huidTbArr[i];
             String sourceTbName = sourceTbArr[i];
-            HoodiePipeline.Builder hudiPipeline = createHudiPipeline(hudiDb, hudiTbName, null);
+            HoodiePipeline.Builder hudiPipeline = createHudiPipeline(hudiDb, hudiTbName, options);
             HudiPipelineMap.put(sourceDb + "." + sourceTbName, hudiPipeline);
         }
         return HudiPipelineMap;

@@ -1,6 +1,7 @@
 package com.byd;
 
 import org.apache.flink.table.api.*;
+import org.apache.flink.types.Row;
 
 public class HudiStreamQuery {
     public static void main(String[] args) {
@@ -18,7 +19,6 @@ public class HudiStreamQuery {
                 .inStreamingMode()
                 .build();
         TableEnvironment tenv = TableEnvironment.create(settings);
-
         tenv.executeSql("CREATE TABLE t1(" +
                 "  id BIGINT PRIMARY KEY NOT ENFORCED," +
                 "  name STRING," +
@@ -37,6 +37,7 @@ public class HudiStreamQuery {
                 "'read.start-commit'='20221031095157'," +
                 "'read.streaming.check-interval'='5'" +
                 ")");
+        Table t1 = tenv.from("t1");
         tenv.executeSql("desc t1");
     }
 }
