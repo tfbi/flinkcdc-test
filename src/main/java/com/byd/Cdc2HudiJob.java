@@ -35,22 +35,18 @@ public class Cdc2HudiJob {
 
         String sourceDb = "test";
         String sourceTbList = "stu,person";
-        String hudiDb = "test";
+        String hudiDb = "db_test";
         String hudiTbList = "hudi_t1,hudi_t2";
 
         // register hudi catalog
         Configuration catalogConf = new Configuration();
-        catalogConf.setString("catalog.path", "hdfs://master02-cdpdev-ic:8020/tmp/hudi_catalog");
+        catalogConf.setString("hive.conf.dir", "/etc/hive/conf");
         catalogConf.setString("default", hudiDb);
-
-        HudiCatalogManager.registerHoodieCatalog(tenv, catalogConf);
+        HudiCatalogManager.registerHoodieHiveCatalog(tenv, catalogConf);
 
         HashMap<String, String> options = new HashMap<>();
-        options.put(FlinkOptions.HIVE_SYNC_ENABLED.key(), "true");
-        options.put(FlinkOptions.HIVE_SYNC_MODE.key(), "hms");
-        options.put(FlinkOptions.HIVE_SYNC_METASTORE_URIS.key(), "thrift://master02-cdpdev-ic:9083");
-        options.put(FlinkOptions.HIVE_SYNC_DB.key(), "db_test");
         options.put(FlinkOptions.HIVE_SYNC_CONF_DIR.key(), "/etc/hive/conf");
+        options.put(FlinkOptions.HIVE_SYNC_DB.key(), "db_test");
 
         // check table and create pipeline
         Map<String, HoodiePipeline.Builder> pipelineMap = HudiPipelineUtils.checkTableAndCreatePipelineMap(sourceDb, sourceTbList, hudiDb, hudiTbList, options);

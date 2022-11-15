@@ -51,7 +51,6 @@ public class HudiPipelineUtils {
         }
         if (!options.isEmpty()) {
             builder.options(options);
-            builder.option(FlinkOptions.HIVE_SYNC_TABLE.key(), tableName);
         }
         return builder;
     }
