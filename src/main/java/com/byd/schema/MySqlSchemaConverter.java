@@ -1,21 +1,15 @@
 package com.byd.schema;
 
-import com.ververica.cdc.debezium.table.DeserializationRuntimeConverter;
 import io.debezium.time.*;
 import org.apache.kafka.connect.data.Decimal;
 import org.apache.kafka.connect.data.Schema;
-
 import java.time.ZoneId;
-import java.util.HashMap;
-import java.util.Map;
+
 
 
 import static com.byd.schema.ConvertFunctions.*;
 
 public class MySqlSchemaConverter extends BaseSchemaConverter {
-
-    protected Map<String, DeserializationRuntimeConverter> classConverterMap = new HashMap<>();
-    protected Map<Schema.Type, DeserializationRuntimeConverter> typeConverterMap = new HashMap<>();
 
 
     public MySqlSchemaConverter(ZoneId serverTimeZone) {
@@ -28,60 +22,51 @@ public class MySqlSchemaConverter extends BaseSchemaConverter {
         intConvertMap();
     }
 
-    protected void intConvertMap() {
-        final DeserializationRuntimeConverter timestampConvert = convertToTimestamp(serverTimeZone);
+    @Override
+    public void intConvertMap() {
+        final DeserializationConverter timestampConvert = convertToTimestamp(serverTimeZone);
         classConverterMap.put(Timestamp.SCHEMA_NAME, timestampConvert);
         classConverterMap.put(MicroTimestamp.SCHEMA_NAME, timestampConvert);
         classConverterMap.put(NanoTimestamp.SCHEMA_NAME, timestampConvert);
         classConverterMap.put(org.apache.kafka.connect.data.Timestamp.LOGICAL_NAME, timestampConvert);
 
-        final DeserializationRuntimeConverter timeConvert = convertToTime();
+        final DeserializationConverter timeConvert = convertToTime();
         classConverterMap.put(MicroTime.SCHEMA_NAME, timeConvert);
         classConverterMap.put(NanoTime.SCHEMA_NAME, timeConvert);
         classConverterMap.put(org.apache.kafka.connect.data.Time.LOGICAL_NAME, timeConvert);
 
-        DeserializationRuntimeConverter dateConvert = convertToDate();
+        DeserializationConverter dateConvert = convertToDate();
         classConverterMap.put(org.apache.kafka.connect.data.Date.LOGICAL_NAME, dateConvert);
         classConverterMap.put(Date.SCHEMA_NAME, dateConvert);
 
-        DeserializationRuntimeConverter decimalConverter = createDecimalConverter();
+        DeserializationConverter decimalConverter = createDecimalConverter();
         classConverterMap.put(Decimal.LOGICAL_NAME, decimalConverter);
 
-        DeserializationRuntimeConverter localTimeZoneConvert = convertToLocalTimeZoneTimestamp();
+        DeserializationConverter localTimeZoneConvert = convertToLocalTimeZoneTimestamp();
         classConverterMap.put(ZonedTimestamp.SCHEMA_NAME, localTimeZoneConvert);
 
 
-        DeserializationRuntimeConverter intConvert = convertToInt();
+        DeserializationConverter intConvert = convertToInt();
         typeConverterMap.put(Schema.Type.INT16, intConvert);
         typeConverterMap.put(Schema.Type.INT32, intConvert);
 
-        DeserializationRuntimeConverter longConvert = convertToLong();
+        DeserializationConverter longConvert = convertToLong();
         typeConverterMap.put(Schema.Type.INT64, longConvert);
 
-        DeserializationRuntimeConverter floatConvert = convertToFloat();
+        DeserializationConverter floatConvert = convertToFloat();
         typeConverterMap.put(Schema.Type.FLOAT32, floatConvert);
 
-        DeserializationRuntimeConverter doubleConvert = convertToDouble();
+        DeserializationConverter doubleConvert = convertToDouble();
         typeConverterMap.put(Schema.Type.FLOAT64, doubleConvert);
 
-        DeserializationRuntimeConverter boolConvert = convertToBoolean();
+        DeserializationConverter boolConvert = convertToBoolean();
         typeConverterMap.put(Schema.Type.BOOLEAN, boolConvert);
 
-        DeserializationRuntimeConverter bytesConvert = convertToBinary();
+        DeserializationConverter bytesConvert = convertToBinary();
         typeConverterMap.put(Schema.Type.BYTES, bytesConvert);
 
-        DeserializationRuntimeConverter stringConvert = convertToString();
+        DeserializationConverter stringConvert = convertToString();
         typeConverterMap.put(Schema.Type.STRING, stringConvert);
 
-    }
-
-    @Override
-    public Object convert(Schema.Type type, Object obj, Schema schema) throws Exception {
-        return typeConverterMap.get(type).convert(obj, schema);
-    }
-
-    @Override
-    public Object convert(String schemaName, Object obj, Schema schema) throws Exception {
-        return classConverterMap.get(schemaName).convert(obj, schema);
     }
 }

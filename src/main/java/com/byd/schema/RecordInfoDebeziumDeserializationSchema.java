@@ -19,13 +19,14 @@
 
 package com.byd.schema;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.ververica.cdc.debezium.DebeziumDeserializationSchema;
 import io.debezium.data.Envelope;
 import org.apache.flink.api.common.typeinfo.BasicTypeInfo;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
-import org.apache.flink.table.data.GenericRowData;
 import org.apache.flink.table.data.RowData;
-import org.apache.flink.table.data.StringData;
+import org.apache.flink.table.types.DataType;
 import org.apache.flink.types.RowKind;
 import org.apache.flink.util.Collector;
 import org.apache.kafka.connect.data.Field;
@@ -42,21 +43,23 @@ import java.util.List;
  *
  * @author bi.tengfei1
  */
-public final class TableRowDataDebeziumDeserializationSchema
-        implements DebeziumDeserializationSchema<TableRowData> {
+public final class RecordInfoDebeziumDeserializationSchema
+        implements DebeziumDeserializationSchema<RecordInfo> {
 
     private static final String SOURCE = "source";
     private static final String TABLE = "table";
     private static final String DATABASE = "db";
+    private static final String HISTORY_RECORD = "historyRecord";
+    private static final String DDL = "ddl";
 
     private final BaseSchemaConverter converter;
 
-    public TableRowDataDebeziumDeserializationSchema(BaseSchemaConverter converter) {
+    public RecordInfoDebeziumDeserializationSchema(BaseSchemaConverter converter) {
         this.converter = converter;
     }
 
     @Override
-    public void deserialize(SourceRecord record, Collector<TableRowData> out) {
+    public void deserialize(SourceRecord record, Collector<RecordInfo> out) {
         Envelope.Operation op = Envelope.operationFor(record);
         Struct value = (Struct) record.value();
         Schema valueSchema = record.valueSchema();
@@ -64,78 +67,88 @@ public final class TableRowDataDebeziumDeserializationSchema
         final Struct source = value.getStruct(SOURCE);
         String table = source.getString(TABLE);
         String database = source.getString(DATABASE);
-        // judge rowKind
-        if (op == Envelope.Operation.CREATE || op == Envelope.Operation.READ) {
-            GenericRowData insert = extractAfterRow(value, valueSchema);
-            insert.setRowKind(RowKind.INSERT);
-            emit(insert, database, table, out);
-        } else if (op == Envelope.Operation.DELETE) {
-            GenericRowData delete = extractBeforeRow(value, valueSchema);
-            delete.setRowKind(RowKind.DELETE);
-            emit(delete, database, table, out);
+        if (op == null) {
+            // schema change
+            String historyRecord = value.getString(HISTORY_RECORD);
+            JsonObject obj = new JsonParser().parse(historyRecord).getAsJsonObject();
+            String ddl = obj.get(DDL).getAsString();
+            emit(ddl, database, table, RecordType.getRecordTypeByDDL(ddl), out);
         } else {
-            GenericRowData before = extractBeforeRow(value, valueSchema);
-            before.setRowKind(RowKind.UPDATE_BEFORE);
-            emit(before, database, table, out);
+            // judge rowKind
+            if (op == Envelope.Operation.CREATE || op == Envelope.Operation.READ) {
+                TRow insert = extractAfterRow(value, valueSchema);
+                insert.setKind(RowKind.INSERT);
+                emit(insert, database, table, out);
+            } else if (op == Envelope.Operation.DELETE) {
+                TRow delete = extractBeforeRow(value, valueSchema);
+                delete.setKind(RowKind.DELETE);
+                emit(delete, database, table, out);
+            } else {
+                TRow before = extractBeforeRow(value, valueSchema);
+                before.setKind(RowKind.UPDATE_BEFORE);
+                emit(before, database, table, out);
 
-            GenericRowData after = extractAfterRow(value, valueSchema);
-            after.setRowKind(RowKind.UPDATE_AFTER);
-            emit(after, database, table, out);
+                TRow after = extractAfterRow(value, valueSchema);
+                after.setKind(RowKind.UPDATE_AFTER);
+                emit(after, database, table, out);
+            }
         }
     }
 
-    private GenericRowData extractAfterRow(Struct value, Schema valueSchema) {
+    private TRow extractAfterRow(Struct value, Schema valueSchema) {
         Struct after = value.getStruct(Envelope.FieldName.AFTER);
         return extractRow(after, valueSchema);
     }
 
-    public GenericRowData extractRow(Struct value, Schema valueSchema) {
+    public TRow extractRow(Struct value, Schema valueSchema) {
         List<Field> fields = value.schema().fields();
-        GenericRowData rowData = new GenericRowData(fields.size() + 1);
+        TRow row = new TRow(fields.size());
         int pos = 0;
         for (Field field : fields) {
             String schemaName = field.schema().name();
-            Object fieldValue;
+            String fileName = field.name();
+            Object fieldValue = null;
+            DataType fieldType = null;
             if (schemaName != null) {
                 try {
                     fieldValue = this.converter.convert(schemaName, value.get(field), field.schema());
+                    fieldType = this.converter.getDataType(schemaName);
                 } catch (Exception e) {
                     e.printStackTrace();
                     fieldValue = value.get(field);
                 }
+
             } else {
                 try {
                     Schema.Type type = field.schema().type();
-                    fieldValue = this.converter.convert(type, value.get(field), field.schema());
+                    Object val = value.get(field);
+                    fieldValue = this.converter.convert(type, val, field.schema());
+                    fieldType = this.converter.getDataType(type);
                 } catch (Exception e) {
                     e.printStackTrace();
                     fieldValue = value.get(field);
                 }
             }
-            rowData.setField(pos++, fieldValue);
+            row.setField(pos++, fileName, fieldValue, fieldType);
         }
-        // partition set
-        try {
-            rowData.setField(pos, StringData.fromString("default"));
-        } catch (Exception e) {
-            System.out.println("default");
-            e.printStackTrace();
-        }
-        return rowData;
+        return row;
     }
 
-    private GenericRowData extractBeforeRow(Struct value, Schema valueSchema) {
+    private TRow extractBeforeRow(Struct value, Schema valueSchema) {
         Struct before = value.getStruct(Envelope.FieldName.BEFORE);
         return extractRow(before, valueSchema);
     }
 
-    private void emit(RowData rowData, String sourceDb, String sourceTable, Collector<TableRowData> collector) {
-        collector.collect(TableRowData.builder().rowData(rowData).sourceDb(sourceDb).sourceTable(sourceTable).build());
+    private void emit(TRow row, String sourceDb, String sourceTable, Collector<RecordInfo> collector) {
+        collector.collect(RecordInfo.builder().recordType(RecordType.ROW_DATA).row(row).sourceDb(sourceDb).sourceTable(sourceTable).build());
+    }
+
+    private void emit(String ddl, String sourceDb, String sourceTable, RecordType recordType, Collector<RecordInfo> collector) {
+        collector.collect(RecordInfo.builder().recordType(recordType).ddl(ddl).sourceDb(sourceDb).sourceTable(sourceTable).build());
     }
 
     @Override
-    public TypeInformation<TableRowData> getProducedType() {
-        return BasicTypeInfo.of(TableRowData.class);
+    public TypeInformation<RecordInfo> getProducedType() {
+        return BasicTypeInfo.of(RecordInfo.class);
     }
-
 }

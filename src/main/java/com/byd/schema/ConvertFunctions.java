@@ -1,18 +1,18 @@
 package com.byd.schema;
 
-import com.ververica.cdc.debezium.table.DeserializationRuntimeConverter;
 import com.ververica.cdc.debezium.utils.TemporalConversions;
 import io.debezium.data.SpecialValueDecimal;
 import io.debezium.data.VariableScaleDecimal;
 import io.debezium.time.*;
+import org.apache.flink.table.api.DataTypes;
 import org.apache.flink.table.data.DecimalData;
 import org.apache.flink.table.data.StringData;
 import org.apache.flink.table.data.TimestampData;
+import org.apache.flink.table.types.DataType;
 import org.apache.flink.table.types.logical.DecimalType;
 import org.apache.kafka.connect.data.Decimal;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.Struct;
-
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.time.Instant;
@@ -22,8 +22,14 @@ import java.util.Map;
 
 public class ConvertFunctions {
 
-    public static DeserializationRuntimeConverter convertToBoolean() {
-        return new DeserializationRuntimeConverter() {
+
+    public static DeserializationConverter convertToBoolean() {
+        return new DeserializationConverter() {
+
+            @Override
+            public DataType getDataType() {
+                return DataTypes.BOOLEAN();
+            }
 
             private static final long serialVersionUID = 1L;
 
@@ -42,8 +48,13 @@ public class ConvertFunctions {
         };
     }
 
-    public static DeserializationRuntimeConverter convertToInt() {
-        return new DeserializationRuntimeConverter() {
+    public static DeserializationConverter convertToInt() {
+        return new DeserializationConverter() {
+
+            @Override
+            public DataType getDataType() {
+                return DataTypes.INT();
+            }
 
             private static final long serialVersionUID = 1L;
 
@@ -60,8 +71,13 @@ public class ConvertFunctions {
         };
     }
 
-    public static DeserializationRuntimeConverter convertToLong() {
-        return new DeserializationRuntimeConverter() {
+    public static DeserializationConverter convertToLong() {
+        return new DeserializationConverter() {
+
+            @Override
+            public DataType getDataType() {
+                return DataTypes.BIGINT();
+            }
 
             private static final long serialVersionUID = 1L;
 
@@ -78,8 +94,13 @@ public class ConvertFunctions {
         };
     }
 
-    public static DeserializationRuntimeConverter convertToDouble() {
-        return new DeserializationRuntimeConverter() {
+    public static DeserializationConverter convertToDouble() {
+        return new DeserializationConverter() {
+
+            @Override
+            public DataType getDataType() {
+                return DataTypes.DOUBLE();
+            }
 
             private static final long serialVersionUID = 1L;
 
@@ -96,8 +117,13 @@ public class ConvertFunctions {
         };
     }
 
-    public static DeserializationRuntimeConverter convertToFloat() {
-        return new DeserializationRuntimeConverter() {
+    public static DeserializationConverter convertToFloat() {
+        return new DeserializationConverter() {
+
+            @Override
+            public DataType getDataType() {
+                return DataTypes.FLOAT();
+            }
 
             private static final long serialVersionUID = 1L;
 
@@ -114,8 +140,14 @@ public class ConvertFunctions {
         };
     }
 
-    public static DeserializationRuntimeConverter convertToDate() {
-        return new DeserializationRuntimeConverter() {
+    public static DeserializationConverter convertToDate() {
+
+        return new DeserializationConverter() {
+
+            @Override
+            public DataType getDataType() {
+                return DataTypes.INT();
+            }
 
             private static final long serialVersionUID = 1L;
 
@@ -126,8 +158,14 @@ public class ConvertFunctions {
         };
     }
 
-    public static DeserializationRuntimeConverter convertToTime() {
-        return new DeserializationRuntimeConverter() {
+    public static DeserializationConverter convertToTime() {
+        return new DeserializationConverter() {
+
+
+            @Override
+            public DataType getDataType() {
+                return DataTypes.INT();
+            }
 
             private static final long serialVersionUID = 1L;
 
@@ -149,8 +187,14 @@ public class ConvertFunctions {
         };
     }
 
-    public static DeserializationRuntimeConverter convertToTimestamp(ZoneId serverTimeZone) {
-        return new DeserializationRuntimeConverter() {
+    public static DeserializationConverter convertToTimestamp(ZoneId serverTimeZone) {
+
+        return new DeserializationConverter() {
+
+            @Override
+            public DataType getDataType() {
+                return DataTypes.TIMESTAMP(3).bridgedTo(TimestampData.class);
+            }
 
             private static final long serialVersionUID = 1L;
 
@@ -177,8 +221,13 @@ public class ConvertFunctions {
         };
     }
 
-    public static DeserializationRuntimeConverter convertToLocalTimeZoneTimestamp() {
-        return new DeserializationRuntimeConverter() {
+    public static DeserializationConverter convertToLocalTimeZoneTimestamp() {
+        return new DeserializationConverter() {
+
+            @Override
+            public DataType getDataType() {
+                return DataTypes.TIMESTAMP_WITH_LOCAL_TIME_ZONE(3).bridgedTo(TimestampData.class);
+            }
 
             private static final long serialVersionUID = 1L;
 
@@ -200,8 +249,14 @@ public class ConvertFunctions {
         };
     }
 
-    public static DeserializationRuntimeConverter convertToString() {
-        return new DeserializationRuntimeConverter() {
+    public static DeserializationConverter convertToString() {
+
+        return new DeserializationConverter() {
+
+            @Override
+            public DataType getDataType() {
+                return DataTypes.STRING().bridgedTo(StringData.class);
+            }
 
             private static final long serialVersionUID = 1L;
 
@@ -212,8 +267,13 @@ public class ConvertFunctions {
         };
     }
 
-    public static DeserializationRuntimeConverter convertToBinary() {
-        return new DeserializationRuntimeConverter() {
+    public static DeserializationConverter convertToBinary() {
+        return new DeserializationConverter() {
+
+            @Override
+            public DataType getDataType() {
+                return DataTypes.BYTES();
+            }
 
             private static final long serialVersionUID = 1L;
 
@@ -234,8 +294,13 @@ public class ConvertFunctions {
         };
     }
 
-    public static DeserializationRuntimeConverter createDecimalConverter() {
-        return new DeserializationRuntimeConverter() {
+    public static DeserializationConverter createDecimalConverter() {
+        return new DeserializationConverter() {
+
+            @Override
+            public DataType getDataType() {
+                return DataTypes.DECIMAL(precision, scale).bridgedTo(DecimalData.class);
+            }
 
             private static final long serialVersionUID = 1L;
             private int precision = DecimalType.DEFAULT_PRECISION;

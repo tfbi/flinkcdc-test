@@ -1,8 +1,8 @@
 package com.byd.utils;
 
 import com.byd.schema.MySqlSchemaConverter;
-import com.byd.schema.TableRowData;
-import com.byd.schema.TableRowDataDebeziumDeserializationSchema;
+import com.byd.schema.RecordInfo;
+import com.byd.schema.RecordInfoDebeziumDeserializationSchema;
 import com.ververica.cdc.connectors.mysql.source.MySqlSource;
 import com.ververica.cdc.connectors.mysql.source.MySqlSourceBuilder;
 import com.ververica.cdc.connectors.mysql.table.StartupOptions;
@@ -52,21 +52,23 @@ public class SourceUtils {
                     .noDefaultValue()
                     .withDescription("表名称列表，用逗号分割");
 
-    public static MySqlSource<TableRowData> createMysqlCDCSource(Configuration config) {
+    public static MySqlSource<RecordInfo> createMysqlCDCSource(Configuration config) {
         String[] dbTableArray = getDbTableArr(config);
-        MySqlSourceBuilder<TableRowData> builder = MySqlSource.<TableRowData>builder();
+        MySqlSourceBuilder<RecordInfo> builder = MySqlSource.<RecordInfo>builder();
         builder.hostname(config.get(HOST_NAME))
                 .port(config.get(PORT))
                 .databaseList(config.get(DATABASE))
                 .username(config.get(USERNAME))
                 .password(config.get(PASSWORD))
                 .tableList(dbTableArray)
+                .includeSchemaChanges(true)
+                .scanNewlyAddedTableEnabled(true)
                 .startupOptions(StartupOptions.initial())
-                .deserializer(new TableRowDataDebeziumDeserializationSchema(new MySqlSchemaConverter()));
+                .deserializer(new RecordInfoDebeziumDeserializationSchema(new MySqlSchemaConverter()));
         return builder.build();
     }
 
-    private static String[] getDbTableArr(Configuration config) {
+    public static String[] getDbTableArr(Configuration config) {
         String tableListStr = config.get(TABLE_LIST_STR);
         String database = config.get(DATABASE);
         String[] dbTableArray = tableListStr.split(",");

@@ -1,10 +1,14 @@
 package com.byd;
 
-import com.byd.schema.TableRowData;
+import com.byd.functions.FilterAndAlarmRecordProcessFunction;
+import com.byd.functions.KeyedByDBTableSelector;
+import com.byd.functions.ShuntStreamProcessFunction;
+import com.byd.schema.RecordInfo;
 import com.byd.utils.*;
 import com.ververica.cdc.connectors.mysql.source.MySqlSource;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.streaming.api.datastream.KeyedStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
@@ -17,7 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Cdc2HudiJob {
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         try {
             runAPP();
         } catch (Exception e) {
@@ -29,6 +33,7 @@ public class Cdc2HudiJob {
         // flink env tenv
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         StreamTableEnvironment tenv = StreamTableEnvironment.create(env);
+        env.setParallelism(4);
 
         //set checkpoint
         CheckpointUtils.setCheckpoint(env, "hdfs://master02-cdpdev-ic:8020/tmp/flink_ck");
@@ -58,15 +63,21 @@ public class Cdc2HudiJob {
         mysqlConf.set(SourceUtils.PASSWORD, "Bigdata@123");
         mysqlConf.set(SourceUtils.DATABASE, sourceDb);
         mysqlConf.set(SourceUtils.TABLE_LIST_STR, sourceTbList);
-        MySqlSource<TableRowData> source = SourceUtils.createMysqlCDCSource(mysqlConf);
-        Map<String, OutputTag<RowData>> outputMap = SourceUtils.createOutputMap(mysqlConf);
+        MySqlSource<RecordInfo> source = SourceUtils.createMysqlCDCSource(mysqlConf);
 
-        // create cdcStream, map rowData and shunt stream
-        SingleOutputStreamOperator<RowData> sourceStream = env
+        // create cdcStream, map rowData and
+        KeyedStream<RecordInfo, String> originStream = env
                 .fromSource(source, WatermarkStrategy.noWatermarks(), "Source")
-                .process(new RowDataAndShuntProcessFunction(outputMap));
+                .process(new FilterAndAlarmRecordProcessFunction())
+                .keyBy(new KeyedByDBTableSelector());
+
+        // shunt stream
+        Map<String, OutputTag<RowData>> outputMap = SourceUtils.createOutputMap(mysqlConf);
+        SingleOutputStreamOperator<RowData> sourceStream = originStream.process(new ShuntStreamProcessFunction(outputMap));
+
         //stream - sink
         StreamUtils.StreamSink2HudiPipeline(sourceStream, outputMap, pipelineMap);
+
         env.execute("flink-cdc_hudi-test");
     }
 }

@@ -5,8 +5,6 @@ import org.apache.flink.table.catalog.Catalog;
 import org.apache.flink.table.catalog.CatalogTable;
 import org.apache.flink.table.catalog.ObjectPath;
 import org.apache.flink.table.catalog.exceptions.TableNotExistException;
-import org.apache.hudi.common.model.HoodieTableType;
-import org.apache.hudi.configuration.FlinkOptions;
 import org.apache.hudi.util.HoodiePipeline;
 
 import java.util.HashMap;
@@ -49,7 +47,7 @@ public class HudiPipelineUtils {
         if (table.getOptions() != null && !table.getOptions().isEmpty()) {
             builder.options(table.getOptions());
         }
-        if (!options.isEmpty()) {
+        if (options != null && !options.isEmpty()) {
             builder.options(options);
         }
         return builder;
@@ -68,8 +66,7 @@ public class HudiPipelineUtils {
         }
         Map<String, HoodiePipeline.Builder> HudiPipelineMap = new HashMap<>();
 
-        for (int i = 0; i < huidTbArr.length; i++) {
-            String hudiTbName = huidTbArr[i];
+        for (String hudiTbName : huidTbArr) {
             ObjectPath tablePath = new ObjectPath(hudiDb, hudiTbName);
             boolean flag = catalog.tableExists(tablePath);
             if (!flag) {
