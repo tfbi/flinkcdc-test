@@ -13,28 +13,18 @@ public class CatalogTest {
                 .inStreamingMode()
                 .build();
         TableEnvironment tenv = TableEnvironment.create(settings);
-        Configuration config = new Configuration();
-        Configuration catalogConf = new Configuration();
-        catalogConf.setString("catalog.path", "hdfs://master02-cdpdev-ic:8020/tmp/hudi_hive_catalog");
-        catalogConf.setString("hive.conf.dir", "/etc/hive/conf");
-        catalogConf.setString("default", "hudi_db");
-        HoodieHiveCatalog hudi_catalog = new HoodieHiveCatalog("hudi_hive_catalog", config);
-        tenv.registerCatalog("hudi_hive_catalog", hudi_catalog);
-        tenv.useCatalog("hudi_hive_catalog");
-        tenv.executeSql("use hudi_db");
-        tenv.executeSql("CREATE TABLE t2(" +
+        tenv.executeSql("CREATE TABLE t1(" +
                 "  id BIGINT PRIMARY KEY NOT ENFORCED," +
                 "  name STRING," +
-                "  company STRING," +
-                "  weight DECIMAL(16,2)," +
+                "  age INT," +
                 "  `partition` STRING" +
                 ")" +
                 "PARTITIONED BY (`partition`)" +
                 "WITH (" +
                 "  'connector'='hudi'," +
-                "  'path'='file:///d://hudi/t2'," +
+                "  'path'='file:///d://hudi/t1'," +
                 "  'table.type'='MERGE_ON_READ'" +
                 ")");
-        tenv.executeSql("select * from t2").print();
+        tenv.executeSql("select * from t1").print();
     }
 }
