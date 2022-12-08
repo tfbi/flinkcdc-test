@@ -49,6 +49,7 @@ public final class RecordInfoDebeziumDeserializationSchema
     private static final String SOURCE = "source";
     private static final String TABLE = "table";
     private static final String DATABASE = "db";
+    private static final String SCHEMA = "schema";
     private static final String HISTORY_RECORD = "historyRecord";
     private static final String DDL = "ddl";
 
@@ -66,31 +67,32 @@ public final class RecordInfoDebeziumDeserializationSchema
         // get source table
         final Struct source = value.getStruct(SOURCE);
         String table = source.getString(TABLE);
+        String schema = source.getString(SCHEMA);
         String database = source.getString(DATABASE);
         if (op == null) {
             // schema change
             String historyRecord = value.getString(HISTORY_RECORD);
             JsonObject obj = new JsonParser().parse(historyRecord).getAsJsonObject();
             String ddl = obj.get(DDL).getAsString();
-            emit(ddl, database, table, RecordType.getRecordTypeByDDL(ddl), out);
+            emit(ddl, database, schema, table, RecordType.getRecordTypeByDDL(ddl), out);
         } else {
             // judge rowKind
             if (op == Envelope.Operation.CREATE || op == Envelope.Operation.READ) {
                 TRow insert = extractAfterRow(value, valueSchema);
                 insert.setKind(RowKind.INSERT);
-                emit(insert, database, table, out);
+                emit(insert, database, schema, table, out);
             } else if (op == Envelope.Operation.DELETE) {
                 TRow delete = extractBeforeRow(value, valueSchema);
                 delete.setKind(RowKind.DELETE);
-                emit(delete, database, table, out);
+                emit(delete, database, schema, table, out);
             } else {
                 TRow before = extractBeforeRow(value, valueSchema);
                 before.setKind(RowKind.UPDATE_BEFORE);
-                emit(before, database, table, out);
+                emit(before, database, schema, table, out);
 
                 TRow after = extractAfterRow(value, valueSchema);
                 after.setKind(RowKind.UPDATE_AFTER);
-                emit(after, database, table, out);
+                emit(after, database, schema, table, out);
             }
         }
     }
@@ -114,7 +116,6 @@ public final class RecordInfoDebeziumDeserializationSchema
                     fieldValue = this.converter.convert(schemaName, value.get(field), field.schema());
                     fieldType = this.converter.getDataType(schemaName);
                 } catch (Exception e) {
-                    e.printStackTrace();
                     fieldValue = value.get(field);
                 }
 
@@ -125,7 +126,6 @@ public final class RecordInfoDebeziumDeserializationSchema
                     fieldValue = this.converter.convert(type, val, field.schema());
                     fieldType = this.converter.getDataType(type);
                 } catch (Exception e) {
-                    e.printStackTrace();
                     fieldValue = value.get(field);
                 }
             }
@@ -139,12 +139,12 @@ public final class RecordInfoDebeziumDeserializationSchema
         return extractRow(before, valueSchema);
     }
 
-    private void emit(TRow row, String sourceDb, String sourceTable, Collector<RecordInfo> collector) {
-        collector.collect(RecordInfo.builder().recordType(RecordType.ROW_DATA).row(row).sourceDb(sourceDb).sourceTable(sourceTable).build());
+    private void emit(TRow row, String sourceDb, String sourceSchema, String sourceTable, Collector<RecordInfo> collector) {
+        collector.collect(RecordInfo.builder().recordType(RecordType.ROW_DATA).row(row).sourceDb(sourceDb).sourceSchema(sourceSchema).sourceTable(sourceTable).build());
     }
 
-    private void emit(String ddl, String sourceDb, String sourceTable, RecordType recordType, Collector<RecordInfo> collector) {
-        collector.collect(RecordInfo.builder().recordType(recordType).ddl(ddl).sourceDb(sourceDb).sourceTable(sourceTable).build());
+    private void emit(String ddl, String sourceDb, String sourceTable, String sourceSchema, RecordType recordType, Collector<RecordInfo> collector) {
+        collector.collect(RecordInfo.builder().recordType(recordType).ddl(ddl).sourceDb(sourceDb).sourceSchema(sourceSchema).sourceTable(sourceTable).build());
     }
 
     @Override

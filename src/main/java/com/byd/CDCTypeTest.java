@@ -33,12 +33,12 @@ public class CDCTypeTest {
 
     public static MySqlSource<RecordInfo> createSource(String[] args) {
         MySqlSourceBuilder<RecordInfo> builder = MySqlSource.<RecordInfo>builder();
-        builder.hostname("43.139.84.117")
+        builder.hostname("10.17.7.197")
                 .port(3306)
                 .scanNewlyAddedTableEnabled(true)
                 .databaseList("test")
-                .username("root")
-                .password("123456")
+                .username("canal")
+                .password("Bigdata@123")
                 .tableList("test.stu")
                 .startupOptions(StartupOptions.initial())
                 .includeSchemaChanges(true)
