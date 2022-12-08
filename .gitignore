@@ -2,3 +2,4 @@
 target
 *.class
 flink-test.iml
+dependency-reduced-pom.xml
