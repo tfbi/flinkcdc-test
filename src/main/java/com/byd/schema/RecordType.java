@@ -1,6 +1,5 @@
 package com.byd.schema;
 
-import java.util.Arrays;
 
 public enum RecordType {
     CREATE_TABLE("create_table"),

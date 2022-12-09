@@ -32,7 +32,7 @@ public class CDCTypeTest {
     }
 
     public static MySqlSource<RecordInfo> createSource(String[] args) {
-        MySqlSourceBuilder<RecordInfo> builder = MySqlSource.<RecordInfo>builder();
+        MySqlSourceBuilder<RecordInfo> builder = MySqlSource.builder();
         builder.hostname("10.17.7.197")
                 .port(3306)
                 .scanNewlyAddedTableEnabled(true)
