@@ -67,7 +67,13 @@ public final class RecordInfoDebeziumDeserializationSchema
         // get source table
         final Struct source = value.getStruct(SOURCE);
         String table = source.getString(TABLE);
-        String schema = source.getString(SCHEMA);
+        String schema = "";
+        try {
+            schema = source.getString(SCHEMA);
+        } catch (Exception ignore) {
+
+        }
+
         String database = source.getString(DATABASE);
         if (op == null) {
             // schema change

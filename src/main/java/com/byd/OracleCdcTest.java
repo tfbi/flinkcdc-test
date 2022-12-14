@@ -33,7 +33,7 @@ public class OracleCdcTest {
                 .tableList("FLINKUSER.STU")
                 .username("flinkuser")
                 .password("flinkpw")
-                .startupOptions(StartupOptions.latest())
+                .startupOptions(StartupOptions.initial())
                 .includeSchemaChanges(true)
                 .chunkKeyColumn("s_id")
                 .debeziumProperties(prop)

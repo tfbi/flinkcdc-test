@@ -40,8 +40,11 @@ public class CDCTypeTest {
                 .username("canal")
                 .password("Bigdata@123")
                 .tableList("test.stu")
-                .startupOptions(StartupOptions.latest())
+                .startupOptions(StartupOptions.initial())
                 .includeSchemaChanges(true)
+                .chunkKeyColumn("id")
+                .fetchSize(2048)
+                .splitSize(1024)
                 .serverId("5500-6400")
                 .deserializer(new RecordInfoDebeziumDeserializationSchema(new MySqlSchemaConverter()));
         return builder.build();
