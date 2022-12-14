@@ -40,7 +40,7 @@ public class CDCTypeTest {
                 .username("canal")
                 .password("Bigdata@123")
                 .tableList("test.stu")
-                .startupOptions(StartupOptions.initial())
+                .startupOptions(StartupOptions.latest())
                 .includeSchemaChanges(true)
                 .serverId("5500-6400")
                 .deserializer(new RecordInfoDebeziumDeserializationSchema(new MySqlSchemaConverter()));

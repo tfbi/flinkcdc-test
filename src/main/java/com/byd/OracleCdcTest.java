@@ -4,7 +4,6 @@ import com.byd.schema.MySqlSchemaConverter;
 import com.byd.schema.RecordInfo;
 import com.byd.schema.RecordInfoDebeziumDeserializationSchema;
 import com.byd.utils.CheckpointUtils;
-import com.byd.utils.StreamUtils;
 import com.ververica.cdc.connectors.base.options.StartupOptions;
 import com.ververica.cdc.connectors.oracle.source.OracleSourceBuilder;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
@@ -34,7 +33,7 @@ public class OracleCdcTest {
                 .tableList("FLINKUSER.STU")
                 .username("flinkuser")
                 .password("flinkpw")
-                .startupOptions(StartupOptions.initial())
+                .startupOptions(StartupOptions.latest())
                 .includeSchemaChanges(true)
                 .chunkKeyColumn("s_id")
                 .debeziumProperties(prop)

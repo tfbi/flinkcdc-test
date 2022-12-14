@@ -1,4 +1,4 @@
-package com.byd.utils;
+package com.byd;
 
 import com.ververica.cdc.connectors.postgres.PostgreSQLSource;
 import com.ververica.cdc.debezium.JsonDebeziumDeserializationSchema;
