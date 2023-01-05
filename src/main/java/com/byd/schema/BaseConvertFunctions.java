@@ -13,14 +13,18 @@ import org.apache.flink.table.types.logical.DecimalType;
 import org.apache.kafka.connect.data.Decimal;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.Struct;
+
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Date;
 import java.util.Map;
 
-public class ConvertFunctions {
+public class BaseConvertFunctions {
 
 
     public static DeserializationConverter convertToBoolean() {
@@ -221,8 +225,9 @@ public class ConvertFunctions {
         };
     }
 
-    public static DeserializationConverter convertToLocalTimeZoneTimestamp() {
+    public static DeserializationConverter convertToLocalTimeZoneTimestamp(ZoneId serverTimeZone) {
         return new DeserializationConverter() {
+            private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX");
 
             @Override
             public DataType getDataType() {
@@ -232,13 +237,18 @@ public class ConvertFunctions {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public Object convert(Object dbzObj, Schema schema) {
+            public Object convert(Object dbzObj, Schema schema) throws ParseException {
                 if (dbzObj instanceof String) {
                     String str = (String) dbzObj;
+                    if (str.contains("+08:00")) {
+                        Date date = sdf.parse(str);
+                        return TimestampData.fromLocalDateTime(
+                                LocalDateTime.ofInstant(date.toInstant(), serverTimeZone));
+                    }
                     // TIMESTAMP_LTZ type is encoded in string type
                     Instant instant = Instant.parse(str);
                     return TimestampData.fromLocalDateTime(
-                            LocalDateTime.ofInstant(instant, ZoneId.of("UTC")));
+                            LocalDateTime.ofInstant(instant, serverTimeZone));
                 }
                 throw new IllegalArgumentException(
                         "Unable to convert to TimestampData from unexpected value '"

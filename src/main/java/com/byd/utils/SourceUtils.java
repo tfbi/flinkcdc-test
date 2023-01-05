@@ -1,6 +1,6 @@
 package com.byd.utils;
 
-import com.byd.schema.MySqlSchemaConverter;
+import com.byd.schema.DefaultSchemaConverter;
 import com.byd.schema.RecordInfo;
 import com.byd.schema.RecordInfoDebeziumDeserializationSchema;
 import com.ververica.cdc.connectors.mysql.source.MySqlSource;
@@ -64,7 +64,7 @@ public class SourceUtils {
                 .includeSchemaChanges(true)
                 .scanNewlyAddedTableEnabled(true)
                 .startupOptions(StartupOptions.initial())
-                .deserializer(new RecordInfoDebeziumDeserializationSchema(new MySqlSchemaConverter()));
+                .deserializer(new RecordInfoDebeziumDeserializationSchema(new DefaultSchemaConverter()));
         return builder.build();
     }
 

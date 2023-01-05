@@ -6,7 +6,8 @@ import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.ProcessFunction;
 import org.apache.flink.util.Collector;
 
-public class FilterAndAlarmRecordProcessFunction extends ProcessFunction<RecordInfo, RecordInfo> {
+public class
+FilterAndAlarmRecordProcessFunction extends ProcessFunction<RecordInfo, RecordInfo> {
 
     @Override
     public void open(Configuration parameters) throws Exception {

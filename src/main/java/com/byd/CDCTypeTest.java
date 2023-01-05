@@ -1,6 +1,6 @@
 package com.byd;
 
-import com.byd.schema.MySqlSchemaConverter;
+import com.byd.schema.DefaultSchemaConverter;
 import com.byd.schema.RecordInfo;
 import com.byd.schema.RecordInfoDebeziumDeserializationSchema;
 import com.byd.utils.CheckpointUtils;
@@ -12,6 +12,8 @@ import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+
+import java.util.Properties;
 
 public class CDCTypeTest {
     public static void main(String[] args) throws Exception {
@@ -33,6 +35,11 @@ public class CDCTypeTest {
 
     public static MySqlSource<RecordInfo> createSource(String[] args) {
         MySqlSourceBuilder<RecordInfo> builder = MySqlSource.builder();
+
+        Properties prop = new Properties();
+//        prop.setProperty("converters","isbn");
+//        prop.setProperty("isbn.type", "com.byd.schema.MysqlTimeConverter");
+        prop.setProperty("decimal.handling.mode","string");
         builder.hostname("10.17.7.197")
                 .port(3306)
                 .scanNewlyAddedTableEnabled(true)
@@ -42,11 +49,13 @@ public class CDCTypeTest {
                 .tableList("test.stu")
                 .startupOptions(StartupOptions.initial())
                 .includeSchemaChanges(true)
+                .serverId("5400-5500")
                 .chunkKeyColumn("id")
                 .fetchSize(2048)
                 .splitSize(1024)
                 .serverId("5500-6400")
-                .deserializer(new RecordInfoDebeziumDeserializationSchema(new MySqlSchemaConverter()));
+                .debeziumProperties(prop)
+                .deserializer(new RecordInfoDebeziumDeserializationSchema(new DefaultSchemaConverter(true)));
         return builder.build();
     }
 }

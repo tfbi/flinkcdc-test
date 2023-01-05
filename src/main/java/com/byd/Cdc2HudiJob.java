@@ -8,6 +8,7 @@ import com.byd.utils.*;
 import com.ververica.cdc.connectors.mysql.source.MySqlSource;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.KeyedStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -71,10 +72,16 @@ public class Cdc2HudiJob {
                 .process(new FilterAndAlarmRecordProcessFunction())
                 .keyBy(new KeyedByDBTableSelector());
 
+
+        DataStream<RecordInfo> source1 = env
+                .fromSource(source, WatermarkStrategy.noWatermarks(), "Source")
+                .process(new FilterAndAlarmRecordProcessFunction());
+
+
+
         // shunt stream
         Map<String, OutputTag<RowData>> outputMap = SourceUtils.createOutputMap(mysqlConf);
         SingleOutputStreamOperator<RowData> sourceStream = originStream.process(new ShuntStreamProcessFunction(outputMap));
-
         //stream - sink
         StreamUtils.StreamSink2HudiPipeline(sourceStream, outputMap, pipelineMap);
 

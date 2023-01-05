@@ -112,6 +112,13 @@ under the License.
             <scope>${default.scope}</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-statebackend-rocksdb_${scala.binary.version}</artifactId>
+            <version>${flink.version}</version>
+            <scope>${default.scope}</scope>
+        </dependency>
+
 
         <!--mysql-cdc-->
         <dependency>

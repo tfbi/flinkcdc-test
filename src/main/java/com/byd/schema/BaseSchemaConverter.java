@@ -2,6 +2,7 @@ package com.byd.schema;
 
 import org.apache.flink.table.types.DataType;
 import org.apache.kafka.connect.data.Schema;
+
 import java.io.Serializable;
 import java.time.ZoneId;
 import java.util.HashMap;
@@ -11,15 +12,17 @@ public abstract class BaseSchemaConverter implements Serializable {
     public final ZoneId serverTimeZone;
     public Map<String, DeserializationConverter> classConverterMap;
     public Map<Schema.Type, DeserializationConverter> typeConverterMap;
+    public boolean isEnableTimeToString;
 
-    public BaseSchemaConverter(ZoneId serverTimeZone) {
+    public BaseSchemaConverter(ZoneId serverTimeZone, boolean isEnableTimeToString) {
         this.serverTimeZone = serverTimeZone;
         classConverterMap = new HashMap<>();
         typeConverterMap = new HashMap<>();
+        this.isEnableTimeToString = isEnableTimeToString;
     }
 
-    protected BaseSchemaConverter() {
-        this(ZoneId.of("Asia/Shanghai"));
+    protected BaseSchemaConverter(boolean isEnableTimeToString) {
+        this(ZoneId.of("Asia/Shanghai"), isEnableTimeToString);
     }
 
     public abstract void intConvertMap();
