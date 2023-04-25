@@ -1,4 +1,4 @@
-package com.byd;
+package com.byd.jobs;
 
 import org.apache.flink.table.api.*;
 import org.apache.flink.types.Row;

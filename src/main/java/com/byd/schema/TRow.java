@@ -1,7 +1,10 @@
 package com.byd.schema;
 
+import com.google.gson.Gson;
+import org.apache.flink.table.api.DataTypes;
 import org.apache.flink.table.data.GenericRowData;
 import org.apache.flink.table.data.RowData;
+import org.apache.flink.table.data.StringData;
 import org.apache.flink.table.types.DataType;
 import org.apache.flink.types.Row;
 import org.apache.flink.types.RowKind;
@@ -21,16 +24,18 @@ public class TRow implements Serializable {
     private final LinkedHashMap<String, Integer> positionByName;
 
     private final DataType[] fieldTypeByPosition;
+    private final String[] fieldNameByPosition;
 
     TRow(
             RowKind kind,
             Object[] fieldByPosition,
             LinkedHashMap<String, Integer> positionByName,
-            DataType[] fieldTypePosition) {
+            DataType[] fieldTypePosition, String[] fieldNameByPosition) {
         this.kind = kind;
         this.fieldByPosition = fieldByPosition;
         this.positionByName = positionByName;
         this.fieldTypeByPosition = fieldTypePosition;
+        this.fieldNameByPosition = fieldNameByPosition;
     }
 
 
@@ -38,6 +43,7 @@ public class TRow implements Serializable {
         this.kind = Preconditions.checkNotNull(kind, "Row kind must not be null.");
         this.fieldByPosition = new Object[arity];
         this.fieldTypeByPosition = new DataType[arity];
+        this.fieldNameByPosition = new String[arity];
         this.positionByName = new LinkedHashMap<>();
     }
 
@@ -86,7 +92,7 @@ public class TRow implements Serializable {
         }
     }
 
-    public DataType getFileType(String name) {
+    public DataType getFieldType(String name) {
         if (positionByName.containsKey(name)) {
             int pos = positionByName.get(name);
             return getFieldType(pos);
@@ -95,7 +101,7 @@ public class TRow implements Serializable {
         }
     }
 
-    private DataType getFieldType(int pos) {
+    public DataType getFieldType(int pos) {
         if (pos >= 0 && pos < fieldTypeByPosition.length) {
             return fieldTypeByPosition[pos];
         } else {
@@ -104,6 +110,14 @@ public class TRow implements Serializable {
         }
     }
 
+    public String getFieldName(int pos) {
+        if (pos >= 0 && pos < fieldNameByPosition.length) {
+            return fieldNameByPosition[pos];
+        } else {
+            throw new IndexOutOfBoundsException(
+                    String.format("index out of Array: %s", pos));
+        }
+    }
 
     @SuppressWarnings("unchecked")
     public <T> T getFieldAs(String name) {
@@ -130,6 +144,7 @@ public class TRow implements Serializable {
             positionByName.put(name, pos);
             fieldByPosition[pos] = value;
             fieldTypeByPosition[pos] = fieldType;
+            fieldNameByPosition[pos] = name;
         } else {
             throw new IndexOutOfBoundsException(
                     String.format("index out of Array: %s", pos));
@@ -153,13 +168,15 @@ public class TRow implements Serializable {
             throw new IllegalArgumentException(String.format("no field name:%s in Trow", name));
         }
     }
-
     public void clear() {
         if (fieldByPosition != null) {
             Arrays.fill(fieldByPosition, null);
         }
         if (fieldTypeByPosition != null) {
             Arrays.fill(fieldTypeByPosition, null);
+        }
+        if (fieldNameByPosition != null) {
+            Arrays.fill(fieldNameByPosition, null);
         }
         positionByName.clear();
     }
@@ -169,7 +186,9 @@ public class TRow implements Serializable {
         return "TRow{" +
                 "kind=" + kind +
                 ", fieldByPosition=" + Arrays.toString(fieldByPosition) +
+                ", positionByName=" + positionByName +
                 ", fieldTypeByPosition=" + Arrays.toString(fieldTypeByPosition) +
+                ", fieldNameByPosition=" + Arrays.toString(fieldNameByPosition) +
                 '}';
     }
 
@@ -180,8 +199,12 @@ public class TRow implements Serializable {
     public RowData toRowData() {
         int arity = fieldByPosition.length;
         GenericRowData rowData = new GenericRowData(kind, arity);
-        for (int i = 0; i < arity; i++) {
-            rowData.setField(i, fieldByPosition[i]);
+        for (int pos = 0; pos < arity; pos++) {
+            if (getFieldType(pos).equals(DataTypes.STRING())) {
+                rowData.setField(pos, StringData.fromString((String) fieldByPosition[pos]));
+            } else {
+                rowData.setField(pos, fieldByPosition[pos]);
+            }
         }
         return rowData;
     }
@@ -191,9 +214,26 @@ public class TRow implements Serializable {
         GenericRowData rowData = new GenericRowData(kind, arity + 1);
 
         for (int pos = 0; pos < arity; pos++) {
-            rowData.setField(pos, fieldByPosition[pos]);
+            if (getFieldType(pos).equals(DataTypes.STRING())) {
+                rowData.setField(pos, StringData.fromString((String) fieldByPosition[pos]));
+            } else {
+                rowData.setField(pos, fieldByPosition[pos]);
+            }
         }
         rowData.setField(rowData.getArity() - 1, partition);
         return rowData;
+    }
+
+    public String toJsonWithKind() {
+        Map<String, Object> data = new HashMap<>();
+        for (String fieldName : positionByName.keySet()) {
+            data.put(fieldName, getField(fieldName));
+        }
+        if (kind == RowKind.DELETE) {
+            data.put("__op", "1");
+        } else {
+            data.put("__op", "0");
+        }
+        return new Gson().toJson(data);
     }
 }

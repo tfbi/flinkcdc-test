@@ -1,29 +1,37 @@
 package com.byd.functions;
 
 import com.byd.schema.RecordInfo;
-import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
-import org.apache.flink.table.data.RowData;
-import org.apache.flink.table.data.StringData;
+import org.apache.flink.streaming.api.functions.ProcessFunction;
 import org.apache.flink.util.Collector;
 import org.apache.flink.util.OutputTag;
+
 import java.util.Map;
 
-public class ShuntStreamProcessFunction extends KeyedProcessFunction<String, RecordInfo, RowData> {
+public class ShuntStreamProcessFunction extends ProcessFunction<RecordInfo, RecordInfo> {
 
-    private final Map<String, OutputTag<RowData>> outputTagMap;
+    private final Map<String, OutputTag<RecordInfo>> outputTagMap;
+    private final String tagKeyFormat;
 
-    public ShuntStreamProcessFunction(Map<String, OutputTag<RowData>> outputTagMap) {
+    public ShuntStreamProcessFunction(
+            String tagKeyFormat, Map<String, OutputTag<RecordInfo>> outputTagMap) {
         this.outputTagMap = outputTagMap;
+        this.tagKeyFormat = tagKeyFormat;
     }
 
     @Override
-    public void processElement(RecordInfo recordInfo, Context context, Collector<RowData> collector) throws Exception {
-        String key = context.getCurrentKey();
-        RowData t = recordInfo.getRow().toRowDataWithPartition(StringData.fromString("default"));
-        if (outputTagMap.containsKey(key)) {
-            context.output(outputTagMap.get(key), t);
+    public void processElement(
+            RecordInfo recordInfo, Context context, Collector<RecordInfo> collector)
+            throws Exception {
+        String key = "";
+        if (tagKeyFormat.equals("db.table")) {
+            key = recordInfo.getSourceDb() + "." + recordInfo.getSourceTable();
         } else {
-            collector.collect(t);
+            key = recordInfo.getSourceSchema() + "." + recordInfo.getSourceTable();
+        }
+        if (outputTagMap.containsKey(key)) {
+            context.output(outputTagMap.get(key), recordInfo);
+        } else {
+            collector.collect(recordInfo);
         }
     }
 }

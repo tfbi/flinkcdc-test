@@ -1,4 +1,4 @@
-package com.byd;
+package com.byd.jobs;
 
 import com.byd.functions.FilterAndAlarmRecordProcessFunction;
 import com.byd.functions.KeyedByDBTableSelector;
@@ -79,11 +79,11 @@ public class Cdc2HudiJob {
 
 
 
-        // shunt stream
-        Map<String, OutputTag<RowData>> outputMap = SourceUtils.createOutputMap(mysqlConf);
-        SingleOutputStreamOperator<RowData> sourceStream = originStream.process(new ShuntStreamProcessFunction(outputMap));
-        //stream - sink
-        StreamUtils.StreamSink2HudiPipeline(sourceStream, outputMap, pipelineMap);
+//        // shunt stream
+//        Map<String, OutputTag<RowData>> outputMap = SourceUtils.createOutputMap(mysqlConf);
+//        SingleOutputStreamOperator<RowData> sourceStream = originStream.process(new ShuntStreamProcessFunction(outputMap));
+//        //stream - sink
+//        StreamUtils.StreamSink2HudiPipeline(sourceStream, outputMap, pipelineMap);
 
         env.execute("flink-cdc_hudi-test");
     }

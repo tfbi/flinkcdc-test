@@ -1,4 +1,4 @@
-package com.byd;
+package com.byd.jobs;
 
 import com.byd.utils.CheckpointUtils;
 import org.apache.flink.api.common.functions.MapFunction;

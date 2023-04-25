@@ -265,14 +265,14 @@ public class BaseConvertFunctions {
 
             @Override
             public DataType getDataType() {
-                return DataTypes.STRING().bridgedTo(StringData.class);
+                return DataTypes.STRING();
             }
 
             private static final long serialVersionUID = 1L;
 
             @Override
             public Object convert(Object dbzObj, Schema schema) {
-                return StringData.fromString(dbzObj.toString());
+                return dbzObj.toString();
             }
         };
     }

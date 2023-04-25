@@ -26,7 +26,7 @@ public class DateForStringConvertFunctions {
 
             @Override
             public DataType getDataType() {
-                return DataTypes.STRING().bridgedTo(StringData.class);
+                return DataTypes.STRING();
             }
 
             private static final long serialVersionUID = 1L;
@@ -44,7 +44,7 @@ public class DateForStringConvertFunctions {
 
             @Override
             public DataType getDataType() {
-                return DataTypes.STRING().bridgedTo(StringData.class);
+                return DataTypes.STRING();
             }
 
             private static final long serialVersionUID = 1L;
@@ -75,7 +75,7 @@ public class DateForStringConvertFunctions {
 
             @Override
             public DataType getDataType() {
-                return DataTypes.STRING().bridgedTo(StringData.class);
+                return DataTypes.STRING();
             }
 
             private static final long serialVersionUID = 1L;
@@ -105,9 +105,9 @@ public class DateForStringConvertFunctions {
                     ret = TimestampData.fromLocalDateTime(localDateTime);
                 }
                 assert ret != null;
-                if (ret.getMillisecond() % MS_24HOUR == 0) {
-                    return DateUtils.formatDate(new Date(ret.getMillisecond()));
-                }
+//               if (ret.getMillisecond() % MS_24HOUR == 0) {
+//                    return DateUtils.formatDateTime(new Date(ret.getMillisecond()));
+//               }
                 return DateUtils.formatDateTime(new Date(ret.getMillisecond() - MS_8HOUR));
             }
         };
@@ -119,7 +119,7 @@ public class DateForStringConvertFunctions {
 
             @Override
             public DataType getDataType() {
-                return DataTypes.STRING().bridgedTo(StringData.class);
+                return DataTypes.STRING();
             }
 
             private static final long serialVersionUID = 1L;

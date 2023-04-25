@@ -25,6 +25,6 @@ FilterAndAlarmRecordProcessFunction extends ProcessFunction<RecordInfo, RecordIn
     }
 
     public void alarm(RecordInfo recordInfo) {
-        System.out.println("系统警告： Schema change" + recordInfo);
+        System.out.println("系统警告： Schema change:" + recordInfo);
     }
 }
